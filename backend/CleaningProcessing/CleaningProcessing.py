@@ -20,11 +20,10 @@ def ProcessBrandScale():
     file_path = os.path.join(
         current_dir, "JobPositionAnalysis", "backend", "data", "processed", "江苏各城市数据.csv")
     df = pd.read_csv(file_path, encoding="utf-8")
-
-    df["公司人数"] = df["公司人数"].map(scale_dict)
-    df.rename(columns={"公司人数": "公司规模"}, inplace=True)
-
-    df.to_csv(file_path, index=False, encoding="utf-8")
+    if "公司人数" in df.columns:
+        df["公司人数"] = df["公司人数"].map(scale_dict)
+        df.rename(columns={"公司人数": "公司规模"}, inplace=True)
+        df.to_csv(file_path, index=False, encoding="utf-8")
 
 
 def SalaryStandardization(salary_str):

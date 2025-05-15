@@ -12,7 +12,7 @@ import os
 import time
 
 
-def getCityJobs(MaxPage=20, CityLisst=["北京"]):
+def getCityJobs(MaxPage=20, CityLisst=["北京"], FileName="undifined.csv"):
     jobs_data = []
     for city in CityLisst:
         CityCode = getCityCode(city)
@@ -28,7 +28,7 @@ def getCityJobs(MaxPage=20, CityLisst=["北京"]):
         for i in range(1, MaxPage + 1):
             print(f"{city},第 {i} 页")
             try:
-                r = dp.listen.wait(timeout=5)
+                r = dp.listen.wait(timeout=10)
                 json_data = r.response.body
                 job_list = json_data["zpData"]["jobList"]
             except Exception as e:
@@ -53,18 +53,15 @@ def getCityJobs(MaxPage=20, CityLisst=["北京"]):
             tab = dp.ele("css:.job-list-container")
             dp.scroll.to_bottom()
             tab.scroll.to_bottom()
-            time.sleep(1)
+            time.sleep(1)  # 最后加上，不然网页翻滚速度太快导致没加载出来，被判断为没有数据了
 
         # 保存路径
     current_dir = os.getcwd()
     base_path = os.path.join(
         current_dir, "JobPositionAnalysis", "backend", "data")
 
-    os.makedirs(os.path.join(base_path, "processed"), exist_ok=True)
-    os.makedirs(os.path.join(base_path, "raw"), exist_ok=True)
-
-    csv_path = os.path.join(base_path, "processed", f"1.csv")
-    json_path = os.path.join(base_path, "raw", f"1.json")
+    csv_path = os.path.join(base_path, "processed", FileName)
+    json_path = os.path.join(base_path, "raw", FileName)
 
     # 保存到JSON
     with open(json_path, "w", encoding="utf-8") as f:
@@ -103,4 +100,4 @@ if __name__ == "__main__":
         '南通', '连云港', '淮安', '盐城', '扬州',
         '镇江', '泰州', '宿迁',
     ]
-    getCityJobs(MaxPage=20, CityLisst=cities)
+    getCityJobs(MaxPage=20, CityLisst=cities, FileName="南京.csv")
