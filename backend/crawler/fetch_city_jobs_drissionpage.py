@@ -12,53 +12,57 @@ import os
 import time
 
 
-def getCityJobs(CityName="北京", MaxPage=20):
-
-    CityCode = getCityCode(CityName)
-    if CityCode == 0:
-        print("城市不存在")
-        return
-
-    dp = ChromiumPage()
-    dp.listen.start("search/joblist.json")
-    dp.get(f"https://www.zhipin.com/web/geek/jobs?city={CityCode}&query=Python")
-
+def getCityJobs(MaxPage=20, CityLisst=["北京"]):
     jobs_data = []
-    for i in range(1, MaxPage + 1):
-        print(f"第 {i} 页")
-        r = dp.listen.wait()
-        json_data = r.response.body
-        job_list = json_data["zpData"]["jobList"]
+    for city in CityLisst:
+        CityCode = getCityCode(city)
+        if CityCode == 0:
+            print("城市不存在")
+            return
 
-        for job in job_list:
-            jobs_data.append(
-                {
-                    "职位": job.get("jobName"),
-                    "学历": job.get("jobDegree"),
-                    "经验": job.get("jobExperience"),
-                    "公司": job.get("brandName"),
-                    "城市": job.get("cityName"),
-                    "区域": job.get("areaDistrict"),
-                    "商圈": job.get("businessDistrict"),
-                    "技能列表": job.get("skills", []),
-                    "福利列表": job.get("welfareList", []),
-                }
-            )
+        dp = ChromiumPage()
+        dp.listen.start("search/joblist.json")
+        dp.get(f"https://www.zhipin.com/web/geek/jobs?city={CityCode}&query=Python")
 
-        tab = dp.ele("css:.job-list-container")
-        dp.scroll.to_bottom()
-        tab.scroll.to_bottom()
-        time.sleep(2)
+        for i in range(1, MaxPage + 1):
+            print(f"第 {i} 页")
+            try:
+                r = dp.listen.wait(timeout=5)
+                json_data = r.response.body
+                job_list = json_data["zpData"]["jobList"]
+            except Exception as e:
+                print(f"请求超时: {e}")
+                break
 
-    # 保存路径
+            for job in job_list:
+                jobs_data.append(
+                    {
+                        "职位": job.get("jobName"),
+                        "学历": job.get("jobDegree"),
+                        "经验": job.get("jobExperience"),
+                        "公司": job.get("brandName"),
+                        "城市,": job.get("cityName"),
+                        "区域": job.get("areaDistrict"),
+                        "商圈": job.get("businessDistrict"),
+                        "技能列表": job.get("skills", []),
+                        "福利列表": job.get("welfareList", []),
+                    }
+                )
+
+            tab = dp.ele("css:.job-list-container")
+            dp.scroll.to_bottom()
+            tab.scroll.to_bottom()
+            time.sleep(2)
+
+        # 保存路径
     current_dir = os.getcwd()
     base_path = os.path.join(current_dir, "JobPositionAnalysis", "backend", "data")
 
     os.makedirs(os.path.join(base_path, "processed"), exist_ok=True)
     os.makedirs(os.path.join(base_path, "raw"), exist_ok=True)
 
-    csv_path = os.path.join(base_path, "processed", f"{CityName}.csv")
-    json_path = os.path.join(base_path, "raw", f"{CityName}.json")
+    csv_path = os.path.join(base_path, "processed", f"JobList.csv")
+    json_path = os.path.join(base_path, "raw", f"JobList.json")
 
     # 保存到JSON
     with open(json_path, "w", encoding="utf-8") as f:
@@ -91,5 +95,42 @@ def getCityCode(CityName="北京"):
 
 
 if __name__ == "__main__":
+    cities = [
+        "南京",
+        "无锡",
+        "徐州",
+        "常州",
+        "苏州",
+        "南通",
+        "连云港",
+        "淮安",
+        "盐城",
+        "扬州",
+        "镇江",
+        "泰州",
+        "宿迁",
+    ]
 
-    getCityJobs("上海", 100)
+    # cities = [
+    #     "上海",
+    #     "北京",
+    #     "深圳",
+    #     "广州",
+    #     "成都",
+    #     "杭州",
+    #     "重庆",
+    #     "苏州",
+    #     "武汉",
+    #     "西安",
+    #     "南京",
+    #     "长沙",
+    #     "天津",
+    #     "郑州",
+    #     "东莞",
+    #     "无锡",
+    #     "宁波",
+    #     "青岛",
+    #     "合肥",
+    # ]
+
+    getCityJobs(MaxPage=20, CityLisst=cities)
