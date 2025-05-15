@@ -2,6 +2,7 @@ import re
 import time
 import random
 import json
+import os
 from bs4 import BeautifulSoup
 import pandas as pd
 import seaborn as sns
@@ -11,11 +12,6 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-
-job = "Python"
-page = 6
-htmls_list = []
-job_list = []
 
 # 设置 chromedriver 的路径
 chromedriver_path = r"C:\Program Files (x86)\QQBrowser\chromedriver.exe"
@@ -32,26 +28,63 @@ driver = webdriver.Chrome(service=service, options=chrome_options)
 driver.set_page_load_timeout(120)  # 页面加载超时设置为 120 秒
 driver.set_script_timeout(120)     # 脚本超时设置为 120 秒
 
-# 遍历页码抓取网页
-for num in range(1, page + 1):
-    url = "https://www.zhipin.com/c101010100/?query={}&page={}&ka=page-{}".format(job, num, num)
+# 读取城市的城市代码
+def getCityCode(CityName="北京"):
+    current_dir = os.getcwd()
+    file_path = os.path.join(
+        current_dir, "JobPositionAnalysis", "backend", "data", "raw", "city_codes.json"
+    )
 
-    driver.get(url)
+    # 读取json
+    city_data = []
+    with open(file_path, mode="r", encoding="utf-8") as file:
+        city_data = json.load(file)
 
-    try:
-        WebDriverWait(driver, 20).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, "div.job-primary"))
-        )
-        htmls = driver.page_source
-        htmls_list.append(str(htmls))  # 将获取页面信息添加至网页存储列表
-    except Exception as e:
-        print(f"页面加载失败: {e}")
-    
-    # 程序休眠，防止频繁请求
-    ran_time = random.randint(10, 20)
-    time.sleep(ran_time)  # 程序休眠
+    for city in city_data:
+        if city.get("city_name") == CityName:
+            CityCode = city.get("city_code")
+            return CityCode
+    return 0
 
-driver.quit()
+cities = [
+    "北京", "上海", "广州", "深圳",
+    "成都", "杭州", "重庆", "武汉", "苏州", "南京", "天津", "郑州", "长沙", "东莞", "青岛", "沈阳",
+    "宁波", "佛山", "西安", "合肥", "福州", "厦门", "无锡", "昆明", "南昌", "南宁", "哈尔滨", "长春",
+    "大连", "济南", "温州", "石家庄", "常州", "泉州", "南通", "徐州", "嘉兴", "惠州", "金华", "珠海",
+    "太原", "烟台", "贵阳", "唐山", "洛阳", "乌鲁木齐"
+]
+
+job = "Python"
+page = 3
+htmls_list = []
+job_list = []
+
+# 遍历城市抓取数据
+for city in cities:
+    print(f"正在抓取 {city} 的职位数据...")
+
+    city_code = getCityCode(city)
+    if city_code == 0:
+        print(f"{city} 城市代码未找到，跳过该城市")
+        continue
+
+    # 遍历页码抓取网页
+    for num in range(1, page + 1):
+        url = f"https://www.zhipin.com/c{city_code}/?query={job}&page={num}&ka=page-{num}"
+        driver.get(url)
+
+        try:
+            WebDriverWait(driver, 20).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, "div.job-primary"))
+            )
+            htmls = driver.page_source
+            htmls_list.append(str(htmls))  # 将获取页面信息添加至网页存储列表
+        except Exception as e:
+            print(f"页面加载失败: {e}")
+
+        # 程序休眠，防止频繁请求
+        ran_time = random.randint(10, 20)
+        time.sleep(ran_time)  # 程序休眠
 
 # 解析所有页面的职位信息并保存
 for htmls in htmls_list:
@@ -80,6 +113,9 @@ for htmls in htmls_list:
             "详情链接": url
         })
 
-with open("Python_info.json", "w", encoding="utf-8") as f:
+# 将数据保存到JSON文件
+with open("city_jobs.json", "w", encoding="utf-8") as f:
     json.dump(job_list, f, ensure_ascii=False, indent=4)
-print("数据已成功写入 job_info.json 文件")
+
+print("数据已成功写入 city_jobs.json 文件")
+driver.quit()
