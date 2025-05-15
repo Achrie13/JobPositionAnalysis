@@ -22,10 +22,11 @@ def getCityJobs(MaxPage=20, CityLisst=["北京"]):
 
         dp = ChromiumPage()
         dp.listen.start("search/joblist.json")
-        dp.get(f"https://www.zhipin.com/web/geek/jobs?city={CityCode}&query=Python")
+        dp.get(
+            f"https://www.zhipin.com/web/geek/jobs?city={CityCode}&query=Python")
 
         for i in range(1, MaxPage + 1):
-            print(f"第 {i} 页")
+            print(f"{city},第 {i} 页")
             try:
                 r = dp.listen.wait(timeout=5)
                 json_data = r.response.body
@@ -40,29 +41,30 @@ def getCityJobs(MaxPage=20, CityLisst=["北京"]):
                         "职位": job.get("jobName"),
                         "学历": job.get("jobDegree"),
                         "经验": job.get("jobExperience"),
+                        "技能列表": job.get("skills", []),
+                        "薪资": job.get("salaryDesc"),
                         "公司": job.get("brandName"),
+                        "公司人数": job.get("brandScaleName"),
                         "城市,": job.get("cityName"),
                         "区域": job.get("areaDistrict"),
-                        "商圈": job.get("businessDistrict"),
-                        "技能列表": job.get("skills", []),
-                        "福利列表": job.get("welfareList", []),
                     }
                 )
 
             tab = dp.ele("css:.job-list-container")
             dp.scroll.to_bottom()
             tab.scroll.to_bottom()
-            time.sleep(2)
+            time.sleep(1)
 
         # 保存路径
     current_dir = os.getcwd()
-    base_path = os.path.join(current_dir, "JobPositionAnalysis", "backend", "data")
+    base_path = os.path.join(
+        current_dir, "JobPositionAnalysis", "backend", "data")
 
     os.makedirs(os.path.join(base_path, "processed"), exist_ok=True)
     os.makedirs(os.path.join(base_path, "raw"), exist_ok=True)
 
-    csv_path = os.path.join(base_path, "processed", f"JobList.csv")
-    json_path = os.path.join(base_path, "raw", f"二线城市数据.json")
+    csv_path = os.path.join(base_path, "processed", f"1.csv")
+    json_path = os.path.join(base_path, "raw", f"1.json")
 
     # 保存到JSON
     with open(json_path, "w", encoding="utf-8") as f:
@@ -95,68 +97,10 @@ def getCityCode(CityName="北京"):
 
 
 if __name__ == "__main__":
-    # cities = [
-    #     "南京",
-    #     "无锡",
-    #     "徐州",
-    #     "常州",
-    #     "苏州",
-    #     "南通",
-    #     "连云港",
-    #     "淮安",
-    #     "盐城",
-    #     "扬州",
-    #     "镇江",
-    #     "泰州",
-    #     "宿迁",
-    # ]
-
-    # cities = ["北京", "上海", "广州", "深圳"]
+    # 江苏省市
     cities = [
-        "成都",
-        "杭州",
-        "重庆",
-        "武汉",
-        "苏州",
-        "南京",
-        "天津",
-        "郑州",
-        "长沙",
-        "东莞",
-        "青岛",
-        "沈阳",
-        "宁波",
-        "佛山",
-        "西安",
+        '南京','无锡','徐州','常州','苏州',
+        '南通','连云港','淮安','盐城','扬州',
+        '镇江','泰州','宿迁',
     ]
-    # cities = [
-    #     "合肥",
-    #     "福州",
-    #     "厦门",
-    #     "无锡",
-    #     "昆明",
-    #     "南昌",
-    #     "南宁",
-    #     "哈尔滨",
-    #     "长春",
-    #     "大连",
-    #     "济南",
-    #     "温州",
-    #     "石家庄",
-    #     "常州",
-    #     "泉州",
-    #     "南通",
-    #     "徐州",
-    #     "嘉兴",
-    #     "惠州",
-    #     "金华",
-    #     "珠海",
-    #     "太原",
-    #     "烟台",
-    #     "贵阳",
-    #     "唐山",
-    #     "洛阳",
-    #     "乌鲁木齐",
-    # ]
-
     getCityJobs(MaxPage=20, CityLisst=cities)
