@@ -45,7 +45,7 @@ def getCityJobs(MaxPage=20, CityLisst=["北京"]):
                         "薪资": job.get("salaryDesc"),
                         "公司": job.get("brandName"),
                         "公司人数": job.get("brandScaleName"),
-                        "城市,": job.get("cityName"),
+                        "城市": job.get("cityName"),
                         "区域": job.get("areaDistrict"),
                     }
                 )
@@ -99,8 +99,8 @@ def getCityCode(CityName="北京"):
 if __name__ == "__main__":
     # 江苏省市
     cities = [
-        '南京','无锡','徐州','常州','苏州',
-        '南通','连云港','淮安','盐城','扬州',
-        '镇江','泰州','宿迁',
+        '南京', '无锡', '徐州', '常州', '苏州',
+        '南通', '连云港', '淮安', '盐城', '扬州',
+        '镇江', '泰州', '宿迁',
     ]
     getCityJobs(MaxPage=20, CityLisst=cities)
